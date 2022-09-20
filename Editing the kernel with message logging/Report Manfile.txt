@@ -1,0 +1,59 @@
+.TH P0.txt
+.SH Name
+P0: My First Kernel Mod
+.SH Synopsis
+The goal of P0 was to create a custom kernel boot message
+.SH Description
+.nf
+sudo find / -name kernel
+.RS
+I learned of this command from ex1
+This command will find a file with the given name / indicates that it will search from the root directory and search all files 
+I used this to find all files which related to the kernel
+.RE
+.PP
+sudo grep -rl "rcu_end_inkernel_boot()" /usr/rep/src/reptilian-kernel
+.RS
+I learned about this command from ex1.
+This command will search files in the given directory for files containing the phrase "rcu_end_inkernel_boot()" -r will search recursively and -l will only return one file per match.
+I used this command to find the file required to edit.
+.RE
+.PP
+usr/rep/src/reptilian-kernel/init/main.c
+.RS
+I used find and grep to locate the file that containe dthe specified function in the directions
+I changed the line before rcu_end_inkernel_boot() to pr_emerg("\n##### Eric Clayton (UFID: 4794-1651) Hello #####\n\n");
+I made this change to print out a custom boot message.
+.RE
+.PP
+.SH TESTING
+.nf
+I reverted to a previous snapshot and ran:
+.RS
+sftp reptilian@192.168.108.128
+#Entered password: reptilian
+lcd C:/COP4600/Projects/P0
+cd /usr/rep/src/reptilian-kernel			# Change local directory to where p0.diff is
+put p0.diff						# Transfer p0.diff to clean vm
+.RE
+.PP
+Then open the remote vm from ubuntu and ran: 
+.RS
+ssh reptilian@192.168.108.128
+#Entered password: reptilian
+cd /usr/rep/src/reptilian-kernel
+git apply p0.diff					# Apply the diff file 
+make && sudo make install && sudo make modules_install	# Build 
+#Entered password: reptilian
+.RE
+.PP
+Finally I ran the vm to see if the changes applied.
+.SH BUGS
+No known bugs.
+.SH LINK
+https://youtu.be/IjoanewZAb0
+.SH REFERENCES/CITATIONS
+.nf
+https://www.kernel.org/doc/html/latest/core-api/printk-basics.html#c.pr_warn
+.SH AUTHOR
+Eric Clayton

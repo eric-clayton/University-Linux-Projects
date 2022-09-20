@@ -1,0 +1,9 @@
+all: mean.o libmath.a
+mean.o:
+	cc -c mean.c
+libmath.a:
+	ar cr libmath.a mean.o
+clean:
+	rm *.o *.a
+
+

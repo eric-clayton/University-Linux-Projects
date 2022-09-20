@@ -1,0 +1,115 @@
+diff --git a/arch/x86/entry/syscalls/syscall_64.tbl b/arch/x86/entry/syscalls/syscall_64.tbl
+index bbfc6d440870..d1caf45938c6 100644
+--- a/arch/x86/entry/syscalls/syscall_64.tbl
++++ b/arch/x86/entry/syscalls/syscall_64.tbl
+@@ -345,7 +345,9 @@
+ 334	common	rseq			__x64_sys_rseq
+ 424	common	pidfd_send_signal	__x64_sys_pidfd_send_signal
+ 434	common	pidfd_open		__x64_sys_pidfd_open
+-
++435     common  get_proc_log_level      __x64_sys_get_proc_log_level
++436     common  set_proc_log_level      __x64_sys_set_proc_log_level
++437     common  proc_log_message        __x64_sys_proc_log_message
+ #
+ # x32-specific system call numbers start at 512 to avoid cache impact
+ # for native 64-bit operation. The __x32_compat_sys stubs are created
+diff --git a/include/linux/syscalls.h b/include/linux/syscalls.h
+index 8e5b2c6d5dea..703abf70a2b0 100644
+--- a/include/linux/syscalls.h
++++ b/include/linux/syscalls.h
+@@ -1120,7 +1120,9 @@ asmlinkage long sys_old_mmap(struct mmap_arg_struct __user *arg);
+  * not implemented -- see kernel/sys_ni.c
+  */
+ asmlinkage long sys_ni_syscall(void);
+-
++asmlinkage int sys_get_proc_log_level();
++asmlinkage int sys_set_proc_log_level(int new_level);
++asmlinkage int sys_proc_log_message(int char* message, int level);
+ #endif /* CONFIG_ARCH_HAS_SYSCALL_WRAPPER */
+ 
+ 
+diff --git a/init/main.c b/init/main.c
+index 02f6b6bd6a17..6f5ecd64962d 100644
+--- a/init/main.c
++++ b/init/main.c
+@@ -1109,6 +1109,7 @@ static int __ref kernel_init(void *unused)
+ 	system_state = SYSTEM_RUNNING;
+ 	numa_default_policy();
+ 
++       pr_emerg("\n### Eric Clayton (Exercise 2) ###\n\n");
+ 	rcu_end_inkernel_boot();
+ 
+ 	if (ramdisk_execute_command) {
+diff --git a/kernel/sys.c b/kernel/sys.c
+index 0a1cdee858de..8d34aba4f13e 100644
+--- a/kernel/sys.c
++++ b/kernel/sys.c
+@@ -617,7 +617,67 @@ SYSCALL_DEFINE1(setuid, uid_t, uid)
+ {
+ 	return __sys_setuid(uid);
+ }
+-
++int custom_process_log_level = 0;
++SYSCALL_DEFINE0(get_proc_log_level)
++{
++        return custom_process_log_level;
++}
++SYSCALL_DEFINE1(set_proc_log_level, int, new_level)
++{
++        extern int custom_process_log_level;
++        if (current_uid().val != 0 || new_level > 7 || new_level < 0)
++                return -1;
++        custom_process_log_level = new_level;
++        return new_level;
++}
++SYSCALL_DEFINE2(proc_log_message, char*, message, int, level)
++{
++        extern int custom_process_log_level;
++        char* log_level_name;
++        char* name = current->comm;
++        int pid = current->pid;
++	int const MAX_LOG = 7;
++	if(level > MAX_LOG)
++		return -1;
++        if(custom_process_log_level < level)
++		return level;
++        switch(level)
++        {
++        case 0:
++                log_level_name = "PROC_OVERRIDE";
++                printk(KERN_EMERG "%s [%s, %d]: %s", log_level_name, name, pid, message);
++                return level;
++        case 1:
++                log_level_name = "PROC_ALERT";
++                printk(KERN_ALERT "%s [%s, %d]: %s", log_level_name, name, pid, message);
++                return level;
++        case 2:
++                log_level_name = "PROC_CRITICAL";
++                printk(KERN_CRIT "%s [%s, %d]: %s", log_level_name, name, pid, message);
++                return level;
++        case 3:
++                log_level_name = "PROC_ERROR";
++                printk(KERN_ERR "%s [%s, %d]: %s", log_level_name, name, pid, message);
++                return level;
++        case 4:
++                log_level_name = "PROC_WARNING";
++                printk(KERN_WARNING "%s [%s, %d]: %s", log_level_name, name, pid, message);
++                return level;
++        case 5:
++                log_level_name = "PROC_NOTICE";
++                printk(KERN_NOTICE "%s [%s, %d]: %s", log_level_name, name, pid, message);
++                return level;
++        case 6:
++                log_level_name = "PROC_INFO";
++                printk(KERN_INFO "%s [%s, %d]: %s", log_level_name, name, pid, message);
++                return level;
++        case 7:
++                log_level_name = "PROC_DEBUG";
++                printk(KERN_DEBUG "%s [%s, %d]: %s", log_level_name, name, pid, message);
++                return level;
++        }
++        return -1;
++}
+ 
+ /*
+  * This function implements a generic ability to update ruid, euid,

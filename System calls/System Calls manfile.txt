@@ -1,0 +1,93 @@
+.TH P1.txt
+.SH Name
+P1: System calls
+.SH Synopsis
+The goal of P1 was to create three systems to get, set and send a message to dmesg
+.SH Description
+.nf
+/usr/rep/src/reptilian-kernel/arch/x86/entry/syscalls/syscall_64.tbl
+.RS
+I figured out that this is the file to change from the first reference
+I added 3 lines to the end of the common syscall table:
+435     common  get_proc_log_level      __x64_sys_get_proc_log_level
+436     common  set_proc_log_level      __x64_sys_set_proc_log_level
+437     common  proc_log_message        __x64_sys_proc_log_message
+Every system call must have a system call number which denotes its position in the system call table
+.RE
+.PP
+.nf
+/usr/rep/src/reptilian-kernel/include/linux/syscalls.h
+.RS
+I learned this was the correct file for the first reference and second reference
+I created 3 new lines for each system call at line 1123 using asmlinkage and the system calls' entry point.
+We use these lines to tell the compiler to limit the function to the CPU stack only. This is beacuse registers are easily corrupted.
+.RE
+.PP
+.nf
+/usr/rep/src/reptilian-kernel/kernel/sys.c
+.RS
+I learned to create my system call definitions in this file from the second reference
+At line 620 I created an integer to hold my custom process log level(cpll). 
+get_proc_level: returns the cpll. 
+set_proc_log_level: Determine if user is not a superuser using current_uid().val != 0 or if the new level is greater than 7 or less than 0 then the syscall returns -1 otherwise change cppl to new level.
+proc_log_message: Uses current->comm and current->pid to find proccess name and id combined with checking for a valid log level prints the corresponding message with that log level
+returns -1 on invalid log level and does not print when the cppl is less than requested level.
+I made these changes so the system calls would function as intended.
+.RE
+.PP
+.nf
+/home/reptilian/p1/process_log/process_log.h
+.RS
+This is the header file for all the source files in process_log
+This file contains all the declarations of all the library functions and harness functions. It also has #define PROC_LOG_CALL 437 for the proc_log_call call number
+.RE
+.PP
+.nf
+/home/reptilian/p1/process_log/libprocess_log.c
+.RS
+This is the source file for all the library functions.
+The functions call each respective system call with syscall() and their call number and parameters;
+.RE
+.PP
+.nf
+/home/reptilian/p1/process_log/harness.c
+.RS
+This is the source file for all the harness functions.
+The retrieve functions create a dynamic array arr using calloc() for the calling program to be able to make a system call with. In arr at arr[0] is the system call number, 
+and the rest of arr are the parameters for the respective system call. Since the interpret functions need not change anything as the system call does all of the work, they
+just return ret_value.
+.RE
+.PP
+.nf
+.SH TESTING
+.nf
+I first altered the harness_test.cpp as it was lacking test cases for printing each log level and some more edge cases then i reverted to a clean vm, applied p1.diff and ran:
+.RS
+tar zxvf process_log.tar.gz
+cd process_log
+make clean
+make
+cd ..
+g++ -std=c++17 -o harness_test harness_test.cpp -L./process_log -lprocess_log
+g++ -std=c++17 -o library_test library_test.cpp -L./process_log -lprocess_log
+gcc -o setlevel setlevel.c -L./process_log -lprocess_log
+./library_test
+reptilian
+sudo ./setlevel 0
+./harness_test
+.RE
+Then I made sure that all test cases passed.
+.PP
+.SH BUGS
+No known bugs.
+.SH LINK
+https://youtu.be/LlCojYvTzes
+.SH REFERENCES/CITATIONS
+.nf
+https://www.cise.ufl.edu/research/reptilian/wiki/doku.php?id=modifying_the_linux_kernel
+https://williamthegrey.wordpress.com/2014/05/18/add-your-own-system-calls-to-the-linux-kernel/
+https://tuxthink.blogspot.com/2011/04/current-process.html
+https://stackoverflow.com/questions/32597444/c-linux-kernel-assistance-with-current-uid
+
+.SH AUTHOR
+Eric Clayton

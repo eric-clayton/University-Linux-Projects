@@ -1,0 +1,75 @@
+.TH EX1.7
+.SH NAME 
+Ex1 - Command Line.pdf
+.SH SYNOPSIS
+This exercise was to get familiar with linux commands and to create an archive file from a command's output
+.SH DESCRIPTION
+.nf
+mkdir clayton_eric
+.RS
+I learned about mkdir in high school when learning about command line.
+This command creates a new directory in the current working directory.
+I used this command as it is suitable for creating a new directory.
+.RE
+.PP
+grep -rl android_dev
+.RS
+I learned about grep from phoenixnap.com.
+grep searches for a file containg a phrase and -r will search recursivley through the directories and -l will only dispay one file per match.
+I chose grep as it finds the file I need to locate and outputs the directory of that file
+.RE
+/usr/rep/src/reptilian-kernel/ex1.txt
+.RS
+The purpose of this file is to contain the output from the command that returns from grep that finds the files containing "android_dev".
+The contents of this file were pulled directly from the output of the command grep -rl android_dev. 
+.RE
+.PP
+grep -rl android_dev | tee /usr/rep/src/reptilian-kernel/ex1.txt
+.RS
+I learned about tee from howtogeek.com.
+tee will take the output of the command on the left side of the | and pipe that to the file argument to the right of it
+This command was chosen to pipe the output of the grep command into ex1.txt
+.RE
+.PP
+mv ex1.txt /home/reptilian/clayton_eric
+.RS
+I learned about the mv command from linuxize.com.
+mv will take a file from the argument and put that file in the directory of the second argument.
+mv was used to move the file into the appropriate directory.
+.RE
+.PP
+tar -cvf ex1.tar clayton_eric
+.RS
+I learned about tar from this exercise and from its man page.
+tar is used to manipulate archive files and the option -c is for creating a tar file and -v is for verbose that outputs the files affected after the command executes and -f is for designating the name of the file to be created which is ex1.tar in this case.
+tar -cvf was chosen to create a tar file from the newly created directory clayton_eric.
+.RE
+.PP
+gzip ex1.tar
+.RS
+I learned about gzip from this exersice and its man page.
+gzip is used to convert a .tar file to a tar.gz file.
+gzip was used to create a .tar.gz file from ex1.tar.
+.RE
+.SH TESTING
+.nf
+mkdir clayton_eric
+cd /usr/rep/src/reptilian-kernel
+grep -rl android_dev
+nano ex1.txt
+grep -rl android_dev | tee /usr/rep/src/reptilian-kernel/ex1.txt
+mv ex1.txt /home/reptilian/clayton_eric
+cd /home/reptilian/
+tar -cvf ex1.tar clayton_eric
+gzip ex1.tar
+.SH BUGS
+None.
+.SH LINK
+None.
+.SH REFERENCES/CITATIONS
+.nf
+https://phoenixnap.com/kb/grep-command-linux-unix-examples#:~:text=To%20search%20for%20the%20word,w%20to%20the%20grep%20command.&text=When%20%2Dw%20is%20omitted%2C%20grep,a%20substring%20of%20another%20word.
+https://linuxize.com/post/how-to-move-files-in-linux-with-mv-command/
+https://www.howtogeek.com/299219/how-to-save-the-output-of-a-command-to-a-file-in-bash-aka-the-linux-and-macos-terminal/#:~:text=To%20use%20bash%20redirection%2C%20you,existing%20contents%20of%20the%20file.
+.SH AUTHOR
+Eric Clayton
